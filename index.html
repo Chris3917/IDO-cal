@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDO Calculator (BNB)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        .input-group input {
+            width: 70%;
+        }
+        .input-group select {
+            width: 28%;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ecf0f1;
+            border-radius: 5px;
+            background-color: #f5f6fa;
+            display: none;
+        }
+        #results h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        #results p {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>IDO Calculator (BNB)</h1>
+    <div class="container">
+        <form id="idoForm">
+            <label for="tokenSupplyIdo">Token Supply for IDO:</label>
+            <input type="number" id="tokenSupplyIdo" step="any" required placeholder="e.g., 100000">
+
+            <label for="tokenPrice">Token Price (BNB):</label>
+            <input type="number" id="tokenPrice" step="any" required placeholder="e.g., 0.01">
+
+            <label for="investment">Individual's Investment (BNB):</label>
+            <input type="number" id="investment" step="any" required placeholder="e.g., 2">
+
+            <label for="oversubscription">Oversubscription Amount (optional):</label>
+            <div class="input-group">
+                <input type="number" id="oversubscription" step="any" placeholder="e.g., 50 or 20">
+                <select id="oversubscriptionType">
+                    <option value="percent">(%)</option>
+                    <option value="number">BNB</option>
+                </select>
+            </div>
+
+            <button type="submit">Calculate</button>
+        </form>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        document.getElementById('idoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            try {
+                console.log("Form submitted, starting calculation...");
+
+                // Get input values
+                const tokenSupplyIdo = parseFloat(document.getElementById('tokenSupplyIdo').value);
+                const tokenPrice = parseFloat(document.getElementById('tokenPrice').value);
+                const investment = parseFloat(document.getElementById('investment').value);
+                const oversubscription = parseFloat(document.getElementById('oversubscription').value) || 0;
+                const oversubscriptionType = document.getElementById('oversubscriptionType').value;
+
+                console.log("Inputs:", { tokenSupplyIdo, tokenPrice, investment, oversubscription, oversubscriptionType });
+
+                // Validation
+                if (isNaN(tokenSupplyIdo) || isNaN(tokenPrice) || isNaN(investment)) {
+                    alert("Please enter valid numbers for all required fields!");
+                    console.log("Validation failed: Invalid numbers.");
+                    return;
+                }
+                if (tokenSupplyIdo <= 0 || tokenPrice <= 0 || investment <= 0) {
+                    alert("Inputs must be positive numbers!");
+                    console.log("Validation failed: Non-positive inputs.");
+                    return;
+                }
+
+                // Calculate base raise
+                const baseRaise = tokenSupplyIdo * tokenPrice;
+                console.log("Base Raise:", baseRaise);
+
+                // Adjust for oversubscription
+                let totalRaise = baseRaise;
+                if (oversubscription > 0) {
+                    if (oversubscriptionType === 'percent') {
+                        totalRaise = baseRaise * (1 + oversubscription / 100);
+                        console.log("Oversubscription (percent):", totalRaise);
+                    } else if (oversubscriptionType === 'number') {
+                        totalRaise = baseRaise + oversubscription;
+                        console.log("Oversubscription (BNB):", totalRaise);
+                    }
+                }
+
+                // Calculate allocation
+                const allocation = (investment / totalRaise) * tokenSupplyIdo;
+                console.log("Allocation:", allocation);
+
+                // Display results
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.style.display = 'block';
+                resultsDiv.innerHTML = `
+                    <h3>Results:</h3>
+                    <p>Token Supply for IDO: ${tokenSupplyIdo.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                    <p>Token Price: ${tokenPrice.toLocaleString(undefined, { maximumFractionDigits: 4 })} BNB</p>
+                    <p>Base Raise: ${baseRaise.toLocaleString(undefined, { maximumFractionDigits: 2 })} BNB</p>
+                    <p>Total Raise (with oversubscription): ${totalRaise.toLocaleString(undefined, { maximumFractionDigits: 2 })} BNB</p>
+                    <p>Allocation for ${investment.toLocaleString(undefined, { maximumFractionDigits: 2 })} BNB: ${allocation.toLocaleString(undefined, { maximumFractionDigits: 2 })} tokens</p>
+                `;
+                console.log("Results displayed.");
+            } catch (error) {
+                alert("An error occurred: " + error.message);
+                console.error("Error in calculation:", error);
+            }
+        });
+    </script>
+</body>
+</html>
